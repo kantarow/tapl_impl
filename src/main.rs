@@ -12,8 +12,8 @@ enum Term {
 }
 
 fn main() {
-    let term = Term::If(Box::new(Term::True), Box::new(Term::Zero), Box::new(Term::False));
-    println!("{:?}", eval1(term));
+    let term = Term::If(Box::new(Term::True), Box::new(Term::Succ(Box::new(Term::Zero))), Box::new(Term::False));
+    println!("{:?}", large_step_eval(term));
 }
 
 fn isnumericval(term: &Term) -> bool {
@@ -53,6 +53,37 @@ fn eval1(term: Term) -> Term {
             }
         },
         _ => Term::NoRuleApplies
+    }
+}
+
+fn large_step_eval(term: Term) -> Term {
+    match term {
+        Term::True => Term::True,
+        Term::False => Term::False,
+        Term::Zero => Term::Zero,
+        Term::Succ(t) => large_step_eval(*t),
+        Term::Pred(t) => {
+            match large_step_eval(*t) {
+                Term::Zero => Term::Zero,
+                Term::Succ(t_) => large_step_eval(*t_),
+                _ => Term::NoRuleApplies
+            }
+        },
+        Term::IsZero(t) => {
+            match *t {
+                Term::Succ(_) => Term::False,
+                Term::Zero => Term::True,
+                _ => Term::NoRuleApplies
+            }
+        }
+        Term::If(t1, t2, t3) => {
+            match large_step_eval(*t1) {
+                Term::True => large_step_eval(*t2),
+                Term::False => large_step_eval(*t3),
+                _ => Term::NoRuleApplies
+            }
+        },
+        Term::NoRuleApplies => Term::NoRuleApplies
     }
 }
 
